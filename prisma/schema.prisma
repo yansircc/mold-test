@@ -1,0 +1,124 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model MaterialPriceSetting {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  density     Decimal   @db.Decimal(10, 6)
+  price       Decimal   @db.Decimal(10, 4)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  isDeleted   Int       @default(0)
+
+  @@map("material_price_setting")
+}
+
+// 机器价格设置
+model MachinePriceSetting {
+  id              Int       @id @default(autoincrement())
+  name            String    @unique// 机器吨位
+  injectionVolume Int       // 实际注塑量
+  moldWidth       Int       // 机器容模宽度
+  moldHeight      Int       // 机器容模高度
+  machiningFee    Decimal   @db.Decimal(10, 2)  // 机器加工费
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  isDeleted       Int       @default(0)
+
+  @@map("machine_price_setting")
+}
+
+// 模具运营费用设置
+model MoldOperatingExpenseSetting {
+  id          Int       @id @default(autoincrement())
+  maxWeight   Int       @unique// 最大重量
+  price       Int       // 运营费用
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  isDeleted   Int       @default(0)
+
+  @@map("mold_operating_expense_setting")
+}
+
+// 模具出口价格设置
+model MoldExportPriceSetting {
+  id          Int       @id @default(autoincrement())
+  maxWeight   Int       @unique // 最大重量
+  coefficient Decimal   @db.Decimal(10, 2)  // 模具价格系数
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  isDeleted   Int       @default(0)
+
+  @@map("mold_export_price_setting")
+}
+
+// 模具常数设置
+model MoldConstantSetting {
+  id            Int       @id @default(autoincrement())
+  constantDescription  String    // 常数描述
+  constantName  String    @unique// 常数名称
+  constantValue Decimal   @db.Decimal(16, 8)  // 常数值
+  // constantValue Decimal   @db.Decimal(10, 2)  // 常数值
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  isDeleted     Int       @default(0)
+
+  @@map("mold_constant_setting")
+}
+
+// 模具价格差价设置
+model MoldPriceDifferSetting {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique// 模具材料名称
+  coefficient Int       // 差价重量系数
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deleted     Int       @default(0)  // 删除标志，0-未删除，1-已删除
+
+  @@map("mold_price_differ_setting")
+}
+
+// 模具内边距设置
+model MoldMarginSpaceRules {
+  id          Int       @id @default(autoincrement())
+  maxLength   Int       @unique// 最大长度
+  spacing     Int       // 内边距
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  isDeleted   Int       @default(0)
+
+  @@map("mold_margin_space_rules")
+}
+
+// 模具外边距设置
+model MoldBorderSpaceRules {
+  id          Int       @id @default(autoincrement())
+  maxLength   Int       @unique// 最大长度
+  spacing     Int       // 外边距
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  isDeleted   Int       @default(0)
+
+  @@map("mold_border_space_rules")
+}
+
+//模具高度设置
+model MoldHeightSetting {
+  id          Int       @id @default(autoincrement())
+  maxHeight   Int       @unique// 最大高度
+  height      Int       // 高度
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  isDeleted   Int       @default(0)
+
+  @@map("mold_height_setting")
+}
