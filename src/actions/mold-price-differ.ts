@@ -53,7 +53,7 @@ export async function createMoldPriceDiffer(values: FormData) {
     return { success: true }
   } catch (error) {
     if (error instanceof ZodError) {
-      return { success: false, error: '输入数据验证失败：' + error.errors[0].message }
+      return { success: false, error: '输入数据验证失败：' + error.errors[0]?.message }
     }
     console.error('Create material price error:', error)
     return { success: false, error: '保存失败，请重试' }
@@ -80,7 +80,7 @@ export async function updateMoldPriceDiffer(values: FormData) {
     return { success: true }
   } catch (error) {
     if (error instanceof ZodError) {
-      return { success: false, error: '输入数据验证失败：' + error.errors[0].message }
+      return { success: false, error: '输入数据验证失败：' + error.errors[0]?.message }
     }
     console.error('Update material price error:', error)
     return { success: false, error: '更新失败，请重试' }
@@ -102,7 +102,7 @@ export async function deleteMoldPriceDiffer(values: FormData) {
     return { success: true }
   } catch (error) {
     if (error instanceof ZodError) {
-      return { success: false, error: '数据验证失败：' + error.errors[0].message }
+      return { success: false, error: '数据验证失败：' + error.errors[0]?.message }
     }
     console.error('Delete material price error:', error)
     return { success: false, error: '删除失败，请重试' }

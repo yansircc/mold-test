@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table"
 import { formatDate } from "@/lib/utils"
 import { type MoldConstantSettingData } from "@/lib/validations/mold-constant"
-import { Edit, Trash2 } from "lucide-react"
+import { Edit } from "lucide-react"
 
 interface MoldConstantListProps {
   constantDatas: MoldConstantSettingData[]

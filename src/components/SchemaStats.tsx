@@ -1,8 +1,8 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { formatNumber } from "@/lib/utils/format";
-import { type MoldDimensions, type ProductPriceGroup, } from "@/lib/validations/mold-calculator";
+// import { Card, CardContent } from "@/components/ui/card";
+// import { formatNumber } from "@/lib/utils/format";
+// import { type MoldDimensions, type ProductPriceGroup, } from "@/lib/validations/mold-calculator";
 
 interface SchemaStatsProps {
   totalMoldPrice: number;

@@ -4,7 +4,7 @@ import { createProductPriceCalculator } from "@/lib/algorithm/mold-calculator-pr
 import { db } from "@/lib/prisma";
 import { type ApiResponse } from "@/lib/validations/common";
 import { type MoldBorderSettingItem } from "@/lib/validations/mold-border-rules";
-import { type groupedProducts, type ProductPriceGroup, type MoldDimensions, type ProductPrice, type ProductPriceDimensions } from "@/lib/validations/mold-calculator";
+import { type groupedProducts, type ProductPriceGroup, type MoldDimensions } from "@/lib/validations/mold-calculator";
 import { type MoldHeightSettingItem } from "@/lib/validations/mold-height-rules";
 import { type MoldMarginSettingItem } from "@/lib/validations/mold-spacing-rules";
 

@@ -1,7 +1,7 @@
-import { findOptimalDistribution } from "../distributing";
-import type { Product } from "@/types/domain/product";
-import { calculateProductGroupSchemas } from "../product-group";
-import { productGroup } from "@/lib/validations/mold-calculator";
+// import { findOptimalDistribution } from "../distributing";
+// import type { Product } from "@/types/domain/product";
+// import { calculateProductGroupSchemas } from "../product-group";
+// import { productGroup } from "@/lib/validations/mold-calculator";
 
 describe("findOptimalDistribution", () => {
 //   it("should find optimal distribution for three products", () => {
@@ -51,49 +51,49 @@ describe("findOptimalDistribution", () => {
 // //     // expect(result.message.general).toContain("找到");
 //    });
 
-   it("should find optimal distribution for three products", () => {
-    //     // 准备三个测试产品
-        const products: productGroup = [
-          {
-            length: 500,
-            width: 250,
-            height: 105,
-            quantity: 3000,
-            volume: 262500,
-            material: "PC",
-            color: "405C",
-            density: 1.2
-          },
-          {
-            length: 250,
-            width: 100,
-            height: 85,
-            quantity: 5000,
-            volume: 208333,
-            material: "ABS",
-            color: "302C",
-            density: 1.2
-          },
-          {
-            length: 230,
-            width: 180,
-            height: 90,
-            quantity: 3000,
-            volume: 125000,
-            material: "PC",
-            color: "302C",
-            density: 1.2
-          }
-        ];
+  //  it("should find optimal distribution for three products", () => {
+  //   //     // 准备三个测试产品
+  //       const products: productGroup = [
+  //         {
+  //           length: 500,
+  //           width: 250,
+  //           height: 105,
+  //           quantity: 3000,
+  //           volume: 262500,
+  //           material: "PC",
+  //           color: "405C",
+  //           density: 1.2
+  //         },
+  //         {
+  //           length: 250,
+  //           width: 100,
+  //           height: 85,
+  //           quantity: 5000,
+  //           volume: 208333,
+  //           material: "ABS",
+  //           color: "302C",
+  //           density: 1.2
+  //         },
+  //         {
+  //           length: 230,
+  //           width: 180,
+  //           height: 90,
+  //           quantity: 3000,
+  //           volume: 125000,
+  //           material: "PC",
+  //           color: "302C",
+  //           density: 1.2
+  //         }
+  //       ];
     
-        const result = calculateProductGroupSchemas(products);
-        console.log("Three Products Distribution Result:", JSON.stringify(result, null, 2));
+  //       const result = calculateProductGroupSchemas(products);
+  //       console.log("Three Products Distribution Result:", JSON.stringify(result, null, 2));
     
-    //     // 验证结果
-    //     // expect(result.totalSolutions).toBeGreaterThan(0);
-    //     // expect(result.solutions.length).toBeGreaterThan(0);
-    //     // expect(result.message.general).toContain("找到");
-       });
+  //   //     // 验证结果
+  //   //     // expect(result.totalSolutions).toBeGreaterThan(0);
+  //   //     // expect(result.solutions.length).toBeGreaterThan(0);
+  //   //     // expect(result.message.general).toContain("找到");
+  //      });
 
   // it("should find optimal distribution for four products", () => {
   //   // 准备四个测试产品

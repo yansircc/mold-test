@@ -52,7 +52,7 @@ export async function updateMoldConstant(values: FormData) {
     return { success: true }
   } catch (error) {
     if (error instanceof ZodError) {
-      return { success: false, error: '输入数据验证失败：' + error.errors[0].message }
+      return { success: false, error: '输入数据验证失败：' + error.errors[0]?.message }
     }
     console.error('Update mold constant error:', error)
     return { success: false, error: '更新失败，请重试' }

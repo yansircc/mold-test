@@ -1,6 +1,6 @@
 import { type Rectangle2D } from "@/types/core/geometry";
 import { type productGroup, type groupedProducts, type groupedProductsSchemas, type ProductGroupItem, type groupedProductsWithScoreItem } from "../validations/mold-calculator";
-import { calculateBottomMargin, calculateEdgeMargin, calculateMinArea, calculateMoldWeight, getRandomMold } from "./min-area";
+import { calculateBottomMargin, calculateEdgeMargin, calculateMinArea, calculateMoldWeight } from "./min-area";
 import { getMoldPrice, getProductPriceByGroup } from "@/actions/mold-price";
 import { calculateInjectionPoint, calculateBalanceScore } from "./balance";
 

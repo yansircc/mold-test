@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { BalanceAnalyzer } from "@/components/score-visualizer/BalanceAnalyzer";
 import { ProductViewer } from "@/components/viewers/ProductViewer";
-import { generateRandomProducts } from "@/lib/utils/product-generator";
-import { calculateMinArea, calculateEdgeMargin, getRandomMold, calculateMoldWeight, calculateBottomMargin } from "@/lib/algorithm/min-area";
+// import { generateRandomProducts } from "@/lib/utils/product-generator";
+import { calculateMinArea } from "@/lib/algorithm/min-area";
 import { calculateInjectionPoint } from "@/lib/algorithm/balance/utils/geometry";
 import type { Rectangle, Rectangle2D } from "@/types/core/geometry";
 import type { Product } from "@/types/domain/product";
@@ -15,14 +15,14 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-import { getMoldPrice,  getProductPriceByGroup } from "@/actions/mold-price";
+// import { getMoldPrice,  getProductPriceByGroup } from "@/actions/mold-price";
 import { useMoldStore } from "@/stores/useMoldStore";
-import { MoldDetails } from "@/components/MoldDetails";
-import { calculateProductGroup, calculateProductGroupSchemas } from "@/lib/algorithm/product-group";
-import { GroupedProductDetails } from "@/components/GroupedProductDetails";
-import { groupedProducts, groupedProductsSchemas, type ProductPriceGroup } from "@/lib/validations/mold-calculator";
+// import { MoldDetails } from "@/components/MoldDetails";
+import { calculateProductGroupSchemas } from "@/lib/algorithm/product-group";
+// import { GroupedProductDetails } from "@/components/GroupedProductDetails";
+import type { groupedProductsSchemas } from "@/lib/validations/mold-calculator";
 import { ProductGroupSchemas } from "@/components/ProductGroupSchemas";
-import { a } from "vitest/dist/suite-IbNSsUWN.js";
+// import { a } from "vitest/dist/suite-IbNSsUWN.js";
 import { ProductInputForm } from "@/components/ProductInputForm";
 
 const scoreTooltips = {
@@ -44,16 +44,17 @@ const scoreTooltips = {
 };
 
 export default function BalanceVisualizerPage() {
-  const [productCount, setProductCount] = useState<number>(4);
+  // const [productCount, setProductCount] = useState<number>(4);
   const [products, setProducts] = useState<Product[]>([]);
   const [layout, setLayout] = useState<Rectangle[] | null>(null);
-  const [identical, setIdentical] = useState<boolean>(false);
-  const [productPriceGroupedResult, setProductPriceGroupedResult] = useState<ProductPriceGroup[]>([]);
-  const { setMoldMaterial, setMoldWeight, setMoldPrice, setMoldDimensions, setError, setEdgeMargin } = useMoldStore();
+  // const [identical, setIdentical] = useState<boolean>(false);
+  // const [productPriceGroupedResult, setProductPriceGroupedResult] = useState<ProductPriceGroup[]>([]);
+  // const { setMoldMaterial, setMoldWeight, setMoldPrice, setMoldDimensions, setError, setEdgeMargin } = useMoldStore();
+  const { setError } = useMoldStore();
   // const { edgeMargin, bottomMargin } = useMoldStore();
   const [productGroupSchemas, setProductGroupSchemas] = useState<groupedProductsSchemas>([]);
-  const [allowDifferentColors, setAllowDifferentColors] = useState<boolean>(false);
-  const [allowDifferentMaterials, setAllowDifferentMaterials] = useState<boolean>(false);
+  const [allowDifferentColors] = useState<boolean>(false);
+  const [allowDifferentMaterials] = useState<boolean>(false);
 
   // 生成新的随机产品并计算布局
   const handleGenerateProducts = async (newProducts: Product[], moldMaterial: string) => {
@@ -356,108 +357,108 @@ export default function BalanceVisualizerPage() {
     
   };
 
-  const handleCalculateGroup = async (groupProducts: groupedProductsSchemas[number]['groups'][number]) => {
+  // const handleCalculateGroup = async (groupProducts: groupedProductsSchemas[number]['groups'][number]) => {
     
-    console.log("Group:", groupProducts);
-    try {
+  //   console.log("Group:", groupProducts);
+  //   try {
 
-      // 1. 将产品转换为 Rectangle2D 数组
-    const rectangles: Rectangle2D[] = groupProducts.group.map((product) => ({
-      width: product.width ?? 0,
-      length: product.length ?? 0,
-    }));
+  //     // 1. 将产品转换为 Rectangle2D 数组
+  //   const rectangles: Rectangle2D[] = groupProducts.group.map((product) => ({
+  //     width: product.width ?? 0,
+  //     length: product.length ?? 0,
+  //   }));
 
-    // 2. 计算最小面积布局
-    const layoutResult = calculateMinArea(rectangles);
-    // TODO: 紧急且重要
-    // 根据布局的长宽，计算出模具的边缘间距
-    const moldEdgeMargin = await calculateEdgeMargin(
-      layoutResult.length,
-      layoutResult.width,
-    );
-    // 根据Product最大高度计算模具底部间距
-    const maxProductHeight = Math.max(...groupProducts.group.map((p) => p.height ?? 0));
-    const moldBottomMargin = await calculateBottomMargin(maxProductHeight);
+  //   // 2. 计算最小面积布局
+  //   const layoutResult = calculateMinArea(rectangles);
+  //   // TODO: 紧急且重要
+  //   // 根据布局的长宽，计算出模具的边缘间距
+  //   const moldEdgeMargin = await calculateEdgeMargin(
+  //     layoutResult.length,
+  //     layoutResult.width,
+  //   );
+  //   // 根据Product最大高度计算模具底部间距
+  //   const maxProductHeight = Math.max(...groupProducts.group.map((p) => p.height ?? 0));
+  //   const moldBottomMargin = await calculateBottomMargin(maxProductHeight);
 
 
-    // const moldBottomMargin = await calculateBottomMargin(
-    //   Math.max(...newProducts.map((p) => p.dimensions?.height ?? 0)),
-    // );
-    // 生成临时的随机模具材料、密度和单位价格
-    const randomMold = getRandomMold();
-    // 此时，有了产品的总体积，模具的总体积以及模具的边缘间距和底部间距，可以计算出模具的重量
-    const moldWeight = calculateMoldWeight(
-      layoutResult.length,
-      layoutResult.width,
-      moldBottomMargin,
-      moldEdgeMargin,
-    );
-    // 模具的总价格也能计算出来
-    const moldPriceResult = await getMoldPrice(
-      randomMold?.name ?? 'NAK80',
-      moldWeight
-    );
-    // 以上信息，都应该通过zustand管理起来
-    // console.log("moldTotalPrice:",moldPriceResult);
-    if(moldPriceResult.success) { 
-      setMoldDimensions({
-        length: layoutResult.length + moldEdgeMargin * 2,
-        width: layoutResult.width + moldEdgeMargin * 2,
-        height: moldBottomMargin,
-      });
-      setEdgeMargin(moldEdgeMargin);
-      setMoldMaterial(randomMold?.name ?? 'NAK80');
-      setMoldWeight(moldWeight);
-      setMoldPrice(moldPriceResult.data ?? 0);
-    } else {
-      console.error('Error getting mold price:', moldPriceResult.message);
-      setError(moldPriceResult.message ?? '获取模具价格失败');
-    }
-    const moldDimensions = {
-      length: layoutResult.length + moldEdgeMargin * 2,
-      width: layoutResult.width + moldEdgeMargin * 2,
-      height: moldBottomMargin,
-      moldMaterial: randomMold?.name ?? 'NAK80',
-      moldWeight: moldWeight,
-      moldPrice: moldPriceResult.data ?? 0,
-      maxInnerLength: layoutResult.length,
-      maxInnerWidth: layoutResult.width,
-      verticalMargin: moldEdgeMargin,
-      horizontalMargin: moldEdgeMargin,
-    };
+  //   // const moldBottomMargin = await calculateBottomMargin(
+  //   //   Math.max(...newProducts.map((p) => p.dimensions?.height ?? 0)),
+  //   // );
+  //   // 生成临时的随机模具材料、密度和单位价格
+  //   const randomMold = getRandomMold();
+  //   // 此时，有了产品的总体积，模具的总体积以及模具的边缘间距和底部间距，可以计算出模具的重量
+  //   const moldWeight = calculateMoldWeight(
+  //     layoutResult.length,
+  //     layoutResult.width,
+  //     moldBottomMargin,
+  //     moldEdgeMargin,
+  //   );
+  //   // 模具的总价格也能计算出来
+  //   const moldPriceResult = await getMoldPrice(
+  //     randomMold?.name ?? 'NAK80',
+  //     moldWeight
+  //   );
+  //   // 以上信息，都应该通过zustand管理起来
+  //   // console.log("moldTotalPrice:",moldPriceResult);
+  //   if(moldPriceResult.success) { 
+  //     setMoldDimensions({
+  //       length: layoutResult.length + moldEdgeMargin * 2,
+  //       width: layoutResult.width + moldEdgeMargin * 2,
+  //       height: moldBottomMargin,
+  //     });
+  //     setEdgeMargin(moldEdgeMargin);
+  //     setMoldMaterial(randomMold?.name ?? 'NAK80');
+  //     setMoldWeight(moldWeight);
+  //     setMoldPrice(moldPriceResult.data ?? 0);
+  //   } else {
+  //     console.error('Error getting mold price:', moldPriceResult.message);
+  //     setError(moldPriceResult.message ?? '获取模具价格失败');
+  //   }
+  //   const moldDimensions = {
+  //     length: layoutResult.length + moldEdgeMargin * 2,
+  //     width: layoutResult.width + moldEdgeMargin * 2,
+  //     height: moldBottomMargin,
+  //     moldMaterial: randomMold?.name ?? 'NAK80',
+  //     moldWeight: moldWeight,
+  //     moldPrice: moldPriceResult.data ?? 0,
+  //     maxInnerLength: layoutResult.length,
+  //     maxInnerWidth: layoutResult.width,
+  //     verticalMargin: moldEdgeMargin,
+  //     horizontalMargin: moldEdgeMargin,
+  //   };
 
-      // 将单个组转换为 groupedProducts 类型
-      const convertedGroup: groupedProducts = [
-        groupProducts.group.map(product => ({
-          length: product.length,
-          width: product.width,
-          height: product.height,
-          volume: product.volume,
-          material: product.material,
-          quantity: product.quantity,
-          color: product.color,
-          density: product.density,
-          cadData: product.cadData,
-          name: product.name,
-          id: product.id,
-        }))
-      ];
+  //     // 将单个组转换为 groupedProducts 类型
+  //     const convertedGroup: groupedProducts = [
+  //       groupProducts.group.map(product => ({
+  //         length: product.length,
+  //         width: product.width,
+  //         height: product.height,
+  //         volume: product.volume,
+  //         material: product.material,
+  //         quantity: product.quantity,
+  //         color: product.color,
+  //         density: product.density,
+  //         cadData: product.cadData,
+  //         name: product.name,
+  //         id: product.id,
+  //       }))
+  //     ];
 
-      console.log("Converted group:", convertedGroup);
-      const productPriceGroupedResult = await getProductPriceByGroup(moldDimensions, convertedGroup);
-      if(productPriceGroupedResult.success) {
-        return productPriceGroupedResult.data ?? [];
-      } else {
-        console.error('Error getting product price by group:', productPriceGroupedResult.message);
-        setError(productPriceGroupedResult.message ?? '获取产品价格分组失败');
-        return [];
-      }
-    } catch (error) {
-      console.error('Error calculating group:', error);
-      setError('计算分组失败');
-      return [];
-    }
-  };
+  //     console.log("Converted group:", convertedGroup);
+  //     const productPriceGroupedResult = await getProductPriceByGroup(moldDimensions, convertedGroup);
+  //     if(productPriceGroupedResult.success) {
+  //       return productPriceGroupedResult.data ?? [];
+  //     } else {
+  //       console.error('Error getting product price by group:', productPriceGroupedResult.message);
+  //       setError(productPriceGroupedResult.message ?? '获取产品价格分组失败');
+  //       return [];
+  //     }
+  //   } catch (error) {
+  //     console.error('Error calculating group:', error);
+  //     setError('计算分组失败');
+  //     return [];
+  //   }
+  // };
 
   return (
     <div className="min-h-screen bg-gray-50/50">
