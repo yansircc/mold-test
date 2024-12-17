@@ -1,7 +1,11 @@
 # Stage 1: Dependencies
-FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat openssl openssl-dev
+FROM node:20-slim AS deps
 WORKDIR /app
+
+# Install OpenSSL 1.1
+RUN apt-get update -y && \
+    apt-get install -y openssl1.1 && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy package files
 COPY package.json ./
@@ -14,9 +18,13 @@ RUN npm install
 RUN npx prisma generate
 
 # Stage 2: Builder
-FROM node:20-alpine AS builder
-RUN apk add --no-cache libc6-compat openssl openssl-dev
+FROM node:20-slim AS builder
 WORKDIR /app
+
+# Install OpenSSL 1.1
+RUN apt-get update -y && \
+    apt-get install -y openssl1.1 && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy dependencies
 COPY --from=deps /app/node_modules ./node_modules
@@ -28,25 +36,27 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 ENV SKIP_ENV_VALIDATION=1
 
-# Generate Prisma Client (in builder stage)
-RUN npx prisma generate
+# Build the application
 RUN npm run build
 
 # Stage 3: Runner
-FROM node:20-alpine AS runner
-RUN apk add --no-cache libc6-compat openssl openssl-dev
-
+FROM node:20-slim AS runner
 WORKDIR /app
+
+# Install OpenSSL 1.1
+RUN apt-get update -y && \
+    apt-get install -y openssl1.1 && \
+    rm -rf /var/lib/apt/lists/*
 
 # Set environment variables
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Create non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs --ingroup nodejs
 
-# Install production dependencies only
+# Copy necessary files
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
