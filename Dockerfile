@@ -1,6 +1,6 @@
 # Stage 1: Dependencies
 FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat openssl
+RUN apk add --no-cache libc6-compat openssl openssl-dev
 WORKDIR /app
 
 # Copy package files
@@ -10,11 +10,12 @@ COPY prisma ./prisma/
 # Install dependencies
 RUN npm install
 
-# Generate Prisma Client
+# Generate Prisma Client (in deps stage)
 RUN npx prisma generate
 
 # Stage 2: Builder
 FROM node:20-alpine AS builder
+RUN apk add --no-cache libc6-compat openssl openssl-dev
 WORKDIR /app
 
 # Copy dependencies
@@ -27,12 +28,14 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 ENV SKIP_ENV_VALIDATION=1
 
-# Build the application
+# Generate Prisma Client (in builder stage)
 RUN npx prisma generate
 RUN npm run build
 
 # Stage 3: Runner
 FROM node:20-alpine AS runner
+RUN apk add --no-cache libc6-compat openssl openssl-dev
+
 WORKDIR /app
 
 # Set environment variables
@@ -53,11 +56,13 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
+# Generate Prisma Client (in runner stage)
+USER root
+RUN npx prisma generate
+USER nextjs
+
 # Set correct permissions
 RUN chown -R nextjs:nodejs /app
-
-# Switch to non-root user
-USER nextjs
 
 # Expose port
 EXPOSE 3000
