@@ -65,8 +65,8 @@ export async function createMachinePrice(values: FormData) {
     revalidatePath('/admin/machine-price')
     return { success: true }
   } catch (error) {
-    if (error instanceof ZodError) {
-      return { success: false, error: '输入数据验证失败：' + error.errors[0].message }
+    if (error instanceof ZodError && error.errors[0]) {
+      return { success: false, error: '输入数据验证失败：' + error.errors[0]?.message }
     }
     console.error('Create machine price error:', error)
     return { success: false, error: '保存失败，请重试' }
@@ -98,8 +98,8 @@ export async function updateMachinePrice(values: FormData) {
     revalidatePath('/admin/machine-price')
     return { success: true }
   } catch (error) {
-    if (error instanceof ZodError) {
-      return { success: false, error: '输入数据验证失败：' + error.errors[0].message }
+    if (error instanceof ZodError && error.errors[0]) {
+      return { success: false, error: '输入数据验证失败：' + error.errors[0]?.message }
     }
     console.error('Update machine price error:', error)
     return { success: false, error: '更新失败，请重试' }
@@ -120,8 +120,8 @@ export async function deleteMachinePrice(values: FormData) {
     revalidatePath('/admin/machine-price')
     return { success: true }
   } catch (error) {
-    if (error instanceof ZodError) {
-      return { success: false, error: '数据验证失败：' + error.errors[0].message }
+    if (error instanceof ZodError && error.errors[0]) {
+      return { success: false, error: '数据验证失败：' + error.errors[0]?.message }
     }
     console.error('Delete machine price error:', error)
     return { success: false, error: '删除失败，请重试' }

@@ -52,7 +52,7 @@ export async function createMoldOperatingExpense(values: FormData) {
     return { success: true }
   } catch (error) {
     if (error instanceof ZodError) {
-      return { success: false, error: '输入数据验证失败：' + error.errors[0].message }
+      return { success: false, error: '输入数据验证失败：' + error.errors[0]?.message }
     }
     console.error('Create mold operating expense error:', error)
     return { success: false, error: '保存失败，请重试' }
@@ -79,7 +79,7 @@ export async function updateMoldOperatingExpense(values: FormData) {
     return { success: true }
   } catch (error) {
     if (error instanceof ZodError) {
-      return { success: false, error: '输入数据验证失败：' + error.errors[0].message }
+      return { success: false, error: '输入数据验证失败：' + error.errors[0]?.message }
     }
     console.error('Update mold operating expense error:', error)
     return { success: false, error: '更新失败，请重试' }
@@ -101,7 +101,7 @@ export async function deleteMoldOperatingExpense(values: FormData) {
     return { success: true }
   } catch (error) {
     if (error instanceof ZodError) {
-      return { success: false, error: '数据验证失败：' + error.errors[0].message }
+      return { success: false, error: '数据验证失败：' + error.errors[0]?.message }
     }
     console.error('Delete mold operating expense error:', error)
     return { success: false, error: '删除失败，请重试' }

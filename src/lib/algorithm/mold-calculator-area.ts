@@ -42,7 +42,7 @@ class MoldAreaCalculator {
     // 注意：这里需要考虑所有相邻产品的总长度来确定间距
     for (let i = 0; i < row.length - 1; i++) {
       if (!row[i] || !row[i + 1]) continue;
-      const totalLength = row[i].length + row[i + 1].length;
+      const totalLength = (row[i]?.length ?? 0) + (row[i + 1]?.length ?? 0);
       const interval = this.calculateSpacing(totalLength);
       // console.log(`Row spacing between products: ${row[i].length} and ${row[i + 1].length}, total: ${totalLength}, interval: ${interval}`);
       intervalSum += interval;
@@ -70,7 +70,7 @@ class MoldAreaCalculator {
     // 计算所有垂直间隔之和
     for (let i = 0; i < column.length - 1; i++) {
       if (!column[i] || !column[i + 1]) continue;
-      const interval = this.calculateSpacing(column[i].width + column[i + 1].width);
+      const interval = this.calculateSpacing((column[i]?.width ?? 0) + (column[i + 1]?.width ?? 0));
       intervalSum += interval;
     }
 
@@ -89,8 +89,8 @@ class MoldAreaCalculator {
       let rowLength = 0;
 
       // 遍历当前行的每个位置
-      for (let colIndex = 0; colIndex < Math.max(currentRow.length, previousRow?.length || 0); colIndex++) {
-        let currentElement = currentRow[colIndex];
+      for (let colIndex = 0; colIndex < Math.max(currentRow?.length ?? 0, previousRow?.length ?? 0); colIndex++) {
+        let currentElement = currentRow?.[colIndex];
         const previousElement = previousRow?.[colIndex];
         
         // 如果当前位置没有元素，检查是否可以使用上一行的元素
@@ -107,7 +107,7 @@ class MoldAreaCalculator {
         if (currentElement) {
           // 如果不是第一个元素，需要加上间距
           if (rowLength > 0) {
-            const previousElementInRow = currentRow[colIndex - 1] || previousRow?.[colIndex - 1];
+            const previousElementInRow = currentRow?.[colIndex - 1] ?? previousRow?.[colIndex - 1];
             if (previousElementInRow) {
               const spacing = this.calculateSpacing(previousElementInRow.length + currentElement.length);
               rowLength += spacing;
@@ -139,7 +139,7 @@ class MoldAreaCalculator {
 
       if (isLastRow) {
         // 如果是最后一行，直接取最大宽度
-        const maxWidth = Math.max(...currentRow.map(item => item.width));
+        const maxWidth = Math.max(...currentRow?.map(item => item.width) ?? []);
 
         // console.log(" last row maxWidth: ", maxWidth)
         totalWidth += maxWidth;
@@ -148,38 +148,31 @@ class MoldAreaCalculator {
         let maxColumnWidth = 0;
         let maxColumnWidtIndex = 0;
         // 遍历当前行的每一列
-        for (let colIndex = 0; colIndex < currentRow.length; colIndex++) {
-          const currentElement = currentRow[colIndex];
-          const nextElement = nextRow[colIndex];
+        for (let colIndex = 0; colIndex < (currentRow?.length ?? 0); colIndex++) {
+          const currentElement = currentRow?.[colIndex];
+          const nextElement = nextRow?.[colIndex];
 
-          if (nextElement) {
+          if (nextElement && currentElement) {
             // 计算当前元素和下一行元素的间距
-            const spacing = this.calculateSpacing(currentElement.width + nextElement.width);
+            const spacing = this.calculateSpacing(currentElement?.width + nextElement?.width);
             // 计算总宽度（当前元素宽度 + 间距 + 下一行元素宽度），然后减去下一行元素宽度
 
             //增加一个判断，如果这个元素的宽度加上间距还小于这行的某个元素，那么直接取某个元素的宽度
 
+            const totalColumnWidth = currentElement?.width + spacing + nextElement?.width;
 
-
-            // console.log(" spacing: ", spacing)
-            const totalColumnWidth = currentElement.width + spacing + nextElement.width;
-            // console.log(" totalColumnWidth: ", totalColumnWidth)
-            
-
-            
             if(totalColumnWidth > maxColumnWidth){
               maxColumnWidtIndex = colIndex;
             }
             maxColumnWidth = Math.max(maxColumnWidth, totalColumnWidth);
             
-            // console.log(" maxColumnWidth: ", maxColumnWidth)
-          } else {
+          } else if (currentElement) {
             // 如果下一行没有对应元素，只考虑当前元素宽度
-            maxColumnWidth = Math.max(maxColumnWidth, currentElement.width);
+            maxColumnWidth = Math.max(maxColumnWidth, currentElement?.width);
           }
         }
         if(nextRow?.[maxColumnWidtIndex]){
-          totalWidth += maxColumnWidth - nextRow[maxColumnWidtIndex].width;
+          totalWidth += maxColumnWidth - (nextRow[maxColumnWidtIndex]?.width ?? 0);
         }
         else{
           totalWidth += maxColumnWidth
@@ -218,7 +211,7 @@ class MoldAreaCalculator {
 
 
     // 计算宽度
-    const columnCount = Math.max(...layout.map(row => row.length));
+    const columnCount = Math.max(...layout.map(row => row?.length ?? 0));
     for (let j = 0; j < columnCount; j++) {
       
       const columnWidth = this.calculateColumnLengthByLayout(layout); // 更新取列宽度的函数
@@ -305,6 +298,10 @@ class MoldAreaCalculator {
     }
 
     const currentProduct = remainingProducts[0];
+    if (!currentProduct) {
+      return { bestLayout, bestMold };
+    }
+
     const newRemaining = remainingProducts.slice(1);
 
     // 尝试原始方向和旋转方向
@@ -323,7 +320,10 @@ class MoldAreaCalculator {
     for (const orientation of orientations) {
       // 尝试添加到现有行
       for (let i = 0; i < currentLayout.length; i++) {
-        const newRow = [...currentLayout[i], orientation];
+        const currentRow = currentLayout[i];
+        if (!currentRow) continue;
+        
+        const newRow = [...currentRow, orientation] as ProductDimensions[];
         const rowLength = this.calculateRowLengthNew(newRow);
         
         if (rowLength + this.calculateMargin(rowLength) <= this.maxDimension) {
@@ -331,7 +331,7 @@ class MoldAreaCalculator {
             ...currentLayout.slice(0, i),
             newRow,
             ...currentLayout.slice(i + 1),
-          ];
+          ] as ProductDimensions[][];
           const result = this.backtrack(newLayout, newRemaining, bestLayout, bestMold, currentDepth + 1);
           bestLayout = result.bestLayout;
           bestMold = result.bestMold;
@@ -340,7 +340,7 @@ class MoldAreaCalculator {
       
       // 建新行
       const result = this.backtrack(
-        [...currentLayout, [orientation]], 
+        [...currentLayout, [orientation]] as ProductDimensions[][],
         newRemaining, 
         bestLayout, 
         bestMold, 
@@ -441,9 +441,9 @@ class MoldAreaCalculator {
     maxInnerLengthTemp = this.calculateRowLengthByLayout(currentLayout);
 
     // 输出列信息
-    const columnCount = Math.max(...currentLayout.map(row => row.length));
+    const columnCount = Math.max(...currentLayout.map(row => row?.length ?? 0));
     for (let j = 0; j < columnCount; j++) {
-      const column = currentLayout.map(row => row[j]).filter(Boolean);
+      const column = currentLayout.map(row => row?.[j]).filter((item): item is ProductDimensions => !!item);
       const columnWidth = this.calculateColumnLengthNew(column);
       maxInnerWidthTemp = Math.max(columnWidth, maxInnerWidthTemp);
       

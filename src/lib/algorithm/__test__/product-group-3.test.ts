@@ -1,5 +1,5 @@
 import { generateRandomProducts } from "@/lib/utils/product-generator";
-import { calculateProductGroup, calculateProductGroupSchemas, calculateProductGroupSchemasSync } from "../product-group";
+import { calculateProductGroup, calculateProductGroupSchemasSync } from "../product-group";
 import { type Rectangle2D } from "@/types/core/geometry";
 import { calculateBottomMargin, calculateEdgeMargin, calculateMinArea, calculateMoldWeight, getRandomMold } from "../min-area";
 import { getMoldPrice, getProductPriceByGroup } from "@/actions/mold-price";
@@ -236,7 +236,7 @@ describe('findOptimalDistribution', () => {
     }
 
     // 方案1
-    const schema1 = productGroupSchemas[0];
+    // const schema1 = productGroupSchemas[0];
 
 
     

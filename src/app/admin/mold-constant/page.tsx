@@ -1,12 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useState } from "react"
-import { Plus } from "lucide-react"
 import { toast } from "sonner"
 
 import { getMoldConstants } from "@/actions/mold-constant"
 import { MoldConstantList } from "@/components/mold-constant/mold-constant-list"
-import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { type MoldConstantSettingData } from "@/lib/validations/mold-constant"
 import { MoldConstantForm } from "@/components/mold-constant/mold-constant-form"

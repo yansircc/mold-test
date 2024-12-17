@@ -10,6 +10,8 @@ import withBundleAnalyzer from "@next/bundle-analyzer";
 const nextConfig: NextConfig = {
   // Optimize asset compression
   compress: true,
+  output: "standalone",
+  reactStrictMode: true,
   experimental: {
     turbo: {
       rules: {

@@ -1,15 +1,15 @@
-import { describe, expect, test } from "vitest";
+import { describe, test } from "vitest";
 import { calculateDistributionScore } from "../index";
 import type { Rectangle } from "@/types/core/geometry";
 import type { Product, Dimensions3D } from "@/types/domain/product";
 
 describe("分布平衡评分测试", () => {
   // 生产相关常量
-  const PRODUCTION = {
-    MIN_GAP: 20,
-    SAFE_GAP: 30,
-    COOLING_GAP: 50,
-  } as const;
+  // const PRODUCTION = {
+  //   MIN_GAP: 20,
+  //   SAFE_GAP: 30,
+  //   COOLING_GAP: 50,
+  // } as const;
 
   // 产品尺寸常量
   const SIZES = {
@@ -32,68 +32,68 @@ describe("分布平衡评分测试", () => {
     };
   }
 
-  // 辅助函数：创建考虑实际产品尺寸和间距的布局
-  function createLayout(
-    positions: [number, number][],
-    products: Product[],
-    minGap: number = PRODUCTION.MIN_GAP,
-  ): Record<number, Rectangle> {
-    return positions.reduce(
-      (layout, [x, y], index) => {
-        const product = products[index];
-        if (!product) return layout;
+  // // 辅助函数：创建考虑实际产品尺寸和间距的布局
+  // function createLayout(
+  //   positions: [number, number][],
+  //   products: Product[],
+  //   minGap: number = PRODUCTION.MIN_GAP,
+  // ): Record<number, Rectangle> {
+  //   return positions.reduce(
+  //     (layout, [x, y], index) => {
+  //       const product = products[index];
+  //       if (!product) return layout;
 
-        // 添加间距到位置坐标
-        const gappedX = x + (x > 0 ? minGap : -minGap);
-        const gappedY = y + (y > 0 ? minGap : -minGap);
+  //       // 添加间距到位置坐标
+  //       const gappedX = x + (x > 0 ? minGap : -minGap);
+  //       const gappedY = y + (y > 0 ? minGap : -minGap);
 
-        layout[product.id] = {
-          x: gappedX,
-          y: gappedY,
-          width: product.dimensions?.width ?? 0,
-          length: product.dimensions?.length ?? 0,
-        };
-        return layout;
-      },
-      {} as Record<number, Rectangle>,
-    );
-  }
+  //       layout[product.id] = {
+  //         x: gappedX,
+  //         y: gappedY,
+  //         width: product.dimensions?.width ?? 0,
+  //         length: product.dimensions?.length ?? 0,
+  //       };
+  //       return layout;
+  //     },
+  //     {} as Record<number, Rectangle>,
+  //   );
+  // }
 
-  // 辅助函数：检测布局是否满足最小间距要求
-  function checkMinimumGap(
-    layout: Record<number, Rectangle>,
-    minGap: number = PRODUCTION.MIN_GAP,
-  ): boolean {
-    const rectangles = Object.values(layout);
-    if (rectangles.length < 2) return true;
+  // // 辅助函数：检测布局是否满足最小间距要求
+  // function checkMinimumGap(
+  //   layout: Record<number, Rectangle>,
+  //   minGap: number = PRODUCTION.MIN_GAP,
+  // ): boolean {
+  //   const rectangles = Object.values(layout);
+  //   if (rectangles.length < 2) return true;
 
-    for (let i = 0; i < rectangles.length; i++) {
-      for (let j = i + 1; j < rectangles.length; j++) {
-        const r1 = rectangles[i]!;
-        const r2 = rectangles[j]!;
+  //   for (let i = 0; i < rectangles.length; i++) {
+  //     for (let j = i + 1; j < rectangles.length; j++) {
+  //       const r1 = rectangles[i]!;
+  //       const r2 = rectangles[j]!;
 
-        const horizontalGap = Math.min(
-          Math.abs(r1.x - (r2.x + r2.width)),
-          Math.abs(r2.x - (r1.x + r1.width)),
-        );
-        const verticalGap = Math.min(
-          Math.abs(r1.y - (r2.y + r2.length)),
-          Math.abs(r2.y - (r1.y + r1.length)),
-        );
+  //       const horizontalGap = Math.min(
+  //         Math.abs(r1.x - (r2.x + r2.width)),
+  //         Math.abs(r2.x - (r1.x + r1.width)),
+  //       );
+  //       const verticalGap = Math.min(
+  //         Math.abs(r1.y - (r2.y + r2.length)),
+  //         Math.abs(r2.y - (r1.y + r1.length)),
+  //       );
 
-        if (r1.x < r2.x + r2.width && r2.x < r1.x + r1.width) {
-          if (verticalGap < minGap) return false;
-        }
-        if (r1.y < r2.y + r2.length && r2.y < r1.y + r1.length) {
-          if (horizontalGap < minGap) return false;
-        }
-        if (horizontalGap < minGap && verticalGap < minGap) {
-          return false;
-        }
-      }
-    }
-    return true;
-  }
+  //       if (r1.x < r2.x + r2.width && r2.x < r1.x + r1.width) {
+  //         if (verticalGap < minGap) return false;
+  //       }
+  //       if (r1.y < r2.y + r2.length && r2.y < r1.y + r1.length) {
+  //         if (horizontalGap < minGap) return false;
+  //       }
+  //       if (horizontalGap < minGap && verticalGap < minGap) {
+  //         return false;
+  //       }
+  //     }
+  //   }
+  //   return true;
+  // }
 
   
 

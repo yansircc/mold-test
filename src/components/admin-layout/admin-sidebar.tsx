@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { ChevronLeft, Settings, Database, Scale, Calculator, DollarSign, Percent, Constants } from "lucide-react"
+import { ChevronLeft, Settings, Database, Scale, Calculator, DollarSign, Percent } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"

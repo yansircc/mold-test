@@ -5,8 +5,8 @@ describe('format utils', () => {
   describe('generateSolutionDescription', () => {
     it('应该生成正确的方案描述', () => {
       const grouping = [
-        [{ weight: 100 }, { weight: 200 }],
-        [{ weight: 150 }, { weight: 150 }],
+        [{ weight: 100, id: 1, name: 'Product 1' }, { weight: 200, id: 2, name: 'Product 2' }],
+        [{ weight: 150, id: 3, name: 'Product 3' }, { weight: 150, id: 4, name: 'Product 4' }],
       ];
 
       const description = generateSolutionDescription(grouping, 0);
@@ -21,8 +21,8 @@ describe('format utils', () => {
 
     it('应该处理不同索引的方案', () => {
       const grouping = [
-        [{ weight: 100 }],
-        [{ weight: 200 }],
+        [{ weight: 100, id: 1, name: 'Product 1' }],
+        [{ weight: 200, id: 2, name: 'Product 2' }],
       ];
 
       const description1 = generateSolutionDescription(grouping, 0);
@@ -37,12 +37,12 @@ describe('format utils', () => {
     it('应该正确格式化分组为JSON格式', () => {
       const groups = [
         [
-          [{ weight: 100 }, { weight: 200 }],
-          [{ weight: 300 }],
+          [{ weight: 100, id: 1, name: 'Product 1' }, { weight: 200, id: 2, name: 'Product 2' }],
+          [{ weight: 300, id: 3, name: 'Product 3' }],
         ],
         [
-          [{ weight: 150 }],
-          [{ weight: 250 }],
+          [{ weight: 150, id: 4, name: 'Product 4' }],
+          [{ weight: 250, id: 5, name: 'Product 5' }],
         ],
       ];
 
