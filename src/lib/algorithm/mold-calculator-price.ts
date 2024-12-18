@@ -57,84 +57,45 @@ class ProductPriceCalculator {
   }
 
   // 根据传入的产品计算价格
-  public calculateProductPriceByParams(moldDimensions: MoldDimensions, paramsProducts: ProductPriceDimensions[], maxMachiningCost: number): ProductPrice[] {
+  public calculateProductPriceByParams(moldDimensions: MoldDimensions, paramsProducts: ProductPriceDimensions[], machiningCost: number): ProductPrice[] {
     if (!paramsProducts) return [];
 
-    // 1. 计算原材料价格
+    // 1. 计算原材料价格和重量
     const productsWithMaterialPrice = paramsProducts.map(product => ({
       ...product,
       materialPrice: this.calculateMaterialPrice(product.volume ?? 0, product.productMaterial ?? ""),
       weight: this.calculateMaterialWeight(product.volume ?? 0, product.productMaterial ?? "")
     }));
 
-    // const totalWeight = productsWithMaterialPrice.reduce((acc, product) => 
-    //   acc + (product.weight ?? 0), 0);
-    
-    // // 2. 计算机器加工费
-    // const maxHeight = Math.max(...productsWithMaterialPrice.map(p => p.height));
-    // const machiningCost = this.calculateMachiningCost(moldDimensions,maxHeight, totalWeight);
+    // 2. 计算总重量占比来分配加工费
+    const totalWeight = productsWithMaterialPrice.reduce((acc, product) => 
+      acc + (product.weight ?? 0), 0);
 
-    // 3. 计算每个产品的加工费
+    // 3. 计算每个产品的价格
     const profitCoefficient = this.moldConstantSettingList.find(rule => rule.constantName === "profitCoefficient")?.constantValue ?? 1.5;
 
-    let remainingProducts = productsWithMaterialPrice.map(p => ({
-      ...p,
-      remainingQuantity: p.productQuantity ?? 0,
-      processingCost: [] as Array<{ productMakingQuantity: number; productMakingPrice: number; 
-        productSinglePrice: number; productTotalPrice: number }>
-    }));
-  
-    while (remainingProducts.some(p => p.remainingQuantity > 0)) {
-      // 找出当前剩余数量中的最小值
-      const minQuantity = Math.min(
-        ...remainingProducts
-          .filter(p => p.remainingQuantity > 0)
-          .map(p => p.remainingQuantity)
-      );
-  
-      // 计算当前还有多少种产品需要处理
-      const activeProductCount = remainingProducts.filter(p => p.remainingQuantity > 0).length;
-      
-      // 计算当前组的单个产品加工费
-      const currentGroupMakingPrice = maxMachiningCost / activeProductCount;
-  
-      // 为所有还有剩余数量的产品添加加工费记录
-      remainingProducts = remainingProducts.map(p => {
-        if (p.remainingQuantity > 0) {
-          return {
-            ...p,
-            remainingQuantity: p.remainingQuantity - minQuantity,
-            processingCost: [
-              ...p.processingCost,
-              {
-                productMakingQuantity: minQuantity,
-                productMakingPrice: currentGroupMakingPrice,
-                productSinglePrice: (p.materialPrice + currentGroupMakingPrice) * profitCoefficient / this.exchangeRate,
-                productTotalPrice: (p.materialPrice + currentGroupMakingPrice) * profitCoefficient / this.exchangeRate * minQuantity
-              }
-            ]
-          };
-        }
-        return p;
-      });
-    }
+    const finalProducts = productsWithMaterialPrice.map(product => {
+      // 根据重量占比分配加工费
+      const weightRatio = (product.weight ?? 0) / totalWeight;
+      const productMachiningCost = machiningCost * weightRatio;
 
-    
-    // console.log("remainingProducts:", JSON.stringify(remainingProducts));
-    // 4. 计算最终价格
-    
-    const finalProducts = remainingProducts.map(product => {
-      const finalPrice = product.processingCost.reduce((total, cost) => {
-        // const price = ((product.materialPrice + cost.productMakingPrice) * profitCoefficient / this.exchangeRate) * cost.productMakingQuantity;
-        return total + (cost.productTotalPrice ?? 0);
-      }, 0);
+      // 计算单个产品的成本和价格
+      const singleCost = product.materialPrice + productMachiningCost;
+      const singlePrice = singleCost * profitCoefficient / this.exchangeRate;
+      const totalPrice = singlePrice * (product.productQuantity ?? 0);
 
       return {
         ...product,
-        finalPrice
+        processingCost: [{
+          productMakingQuantity: product.productQuantity ?? 0,
+          productMakingPrice: productMachiningCost,
+          productSinglePrice: singlePrice,
+          productTotalPrice: totalPrice
+        }],
+        finalPrice: totalPrice
       };
     });
-    // console.log("finalProducts:",finalProducts);
+
     return finalProducts;
   }
 
@@ -154,14 +115,15 @@ class ProductPriceCalculator {
     return weight * fixedLossRate * materialData.price;
   }
 
-  private calculateMachiningCost(moldDimensions: MoldDimensions,  totalWeight: number): number {
+  private calculateMachiningCost(moldDimensions: MoldDimensions, totalWeight: number): number {
     if (!moldDimensions) return 0;
 
     const { length, width, height } = moldDimensions;
     const moldWidth = Math.min(length, width);
     const moldHeight = height;
 
-    const eligibleMachines = this.machinePriceSettingList
+    // 找到合适的机器
+    const eligibleMachine = this.machinePriceSettingList
       .filter(machine => 
         moldWidth <= machine.moldWidth &&
         moldHeight <= machine.moldHeight &&
@@ -171,9 +133,15 @@ class ProductPriceCalculator {
         const aValue = parseInt(a.name.replace('T', ''));
         const bValue = parseInt(b.name.replace('T', ''));
         return aValue - bValue;
-      });
+      })[0];
 
-    return eligibleMachines[0]?.machiningFee ?? 0;
+    if (!eligibleMachine) return 0;
+
+    // 计算实际机器加工费
+    const machiningFee = eligibleMachine.machiningFee;
+    const utilizationRate = 0.8; // 机器利用率，可以从配置中获取
+    
+    return machiningFee * utilizationRate;
   }
 
   public async calculateMoldPrice(moldDimensions: MoldDimensions): Promise<MoldDimensions> {

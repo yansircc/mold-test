@@ -10,74 +10,75 @@ interface ProductDetailsProps {
   product: Product;
 }
 
+interface DataItemProps {
+  label: string;
+  value: string | number;
+  unit?: string;
+}
+
+function DataItem({ label, value, unit }: DataItemProps) {
+  return (
+    <div className="space-y-1.5">
+      <div className="text-sm text-gray-500">{label}</div>
+      <div className="font-medium">
+        {typeof value === 'number' ? formatNumber(value) : value}
+        {unit && <span className="ml-1 text-gray-500 text-sm">{unit}</span>}
+      </div>
+    </div>
+  );
+}
+
 export function ProductDetails({ product }: ProductDetailsProps) {
-  // 获取材料信息
   const material = product.material ? (JSON.parse(product.material) as Material) : undefined;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>{product.name || `产品 ${product.id}`}</span>
-          <Badge variant="outline">{product.id}</Badge>
+    <Card className="bg-white">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center justify-between text-lg">
+          <div className="flex items-center gap-2">
+            <span>{product.name || `产品 ${product.id}`}</span>
+            <Badge variant="outline" className="h-5">ID: {product.id}</Badge>
+          </div>
+          <Badge variant="secondary" className="capitalize">
+            {product.materialName}
+          </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* 基本信息 */}
-        <div className="space-y-2">
-          <h4 className="font-medium">基本信息</h4>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <div className="text-gray-500">尺寸 (mm)</div>
-              <div className="font-medium">
-                {formatNumber(product.dimensions?.width ?? 0)} x{" "}
-                {formatNumber(product.dimensions?.length ?? 0)} x{" "}
-                {formatNumber(product.dimensions?.height ?? 0)}
-              </div>
-            </div>
-            <div>
-              <div className="text-gray-500">重量 (g)</div>
-              <div className="font-medium">
-                {formatNumber(product.weight ?? 0)}
-              </div>
-            </div>
-            <div>
-              <div className="text-gray-500">体积 (mm³)</div>
-              <div className="font-medium">
-                {/* {formatNumber(
-                  ((product.dimensions?.width ?? 0) *
-                    (product.dimensions?.length ?? 0) *
-                    (product.dimensions?.height ?? 0)) /
-                    1000
-                )} */}
-                {formatNumber(product.volume ?? 0)}
-              </div>
-            </div>
-            <div>
-              <div className="text-gray-500">密度</div>
-              <div className="font-medium">
-                {/* {formatNumber(
-                  (product.weight ?? 0) /
-                    ((product.dimensions?.width ?? 0) *
-                      (product.dimensions?.length ?? 0) *
-                      (product.dimensions?.height ?? 0)) *
-                    1000
-                )}  */}
-                {formatNumber(product.density ?? 0, 6)}
-              </div>
-            </div>
-            <div>
-              <div className="text-gray-500">颜色</div>
-              <div className="font-medium">
-                {product.color ?? "未指定"}
-              </div>
-            </div>
-            <div>
-              <div className="text-gray-500">材料</div>
-              <div className="font-medium">
-                {product.materialName ?? "未指定"}
-              </div>
-            </div>
+        <div className="space-y-3">
+          <h4 className="font-medium text-sm text-gray-900 flex items-center gap-2">
+            基本信息
+            <Badge variant="outline" className="capitalize">
+              {product.color}
+            </Badge>
+          </h4>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <DataItem 
+              label="尺寸" 
+              value={`${formatNumber(product.dimensions?.width ?? 0)} × ${formatNumber(product.dimensions?.length ?? 0)} × ${formatNumber(product.dimensions?.height ?? 0)}`}
+              unit="mm"
+            />
+            <DataItem 
+              label="重量" 
+              value={product.weight ?? 0}
+              unit="g"
+            />
+            <DataItem 
+              label="体积" 
+              value={product.volume ?? 0}
+              unit="mm³"
+            />
+            <DataItem 
+              label="密度" 
+              value={product.density ?? 0}
+              unit="g/cm³"
+            />
+            <DataItem 
+              label="生产数量" 
+              value={product.quantity ?? 0}
+              unit="件"
+            />
           </div>
         </div>
 
@@ -86,33 +87,33 @@ export function ProductDetails({ product }: ProductDetailsProps) {
         {/* 材料信息 */}
         {material && (
           <>
-            <div className="space-y-2">
-              <h4 className="font-medium">材料信息</h4>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <div className="text-gray-500">材料</div>
-                  <div className="font-medium">{material.name}</div>
-                </div>
-                <div>
-                  <div className="text-gray-500">类型</div>
-                  <div className="font-medium">{material.type}</div>
-                </div>
-                <div>
-                  <div className="text-gray-500">密度 (g/cm³)</div>
-                  <div className="font-medium">{formatNumber(material.density)}</div>
-                </div>
-                <div>
-                  <div className="text-gray-500">熔点 (°C)</div>
-                  <div className="font-medium">{formatNumber(material.meltTemp)}</div>
-                </div>
-                <div>
-                  <div className="text-gray-500">模具温度 (°C)</div>
-                  <div className="font-medium">{formatNumber(material.moldTemp)}</div>
-                </div>
-                <div>
-                  <div className="text-gray-500">收缩率 (%)</div>
-                  <div className="font-medium">{formatNumber(material.shrinkage)}</div>
-                </div>
+            <div className="space-y-3">
+              <h4 className="font-medium text-sm text-gray-900">材料参数</h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <DataItem 
+                  label="材料类型" 
+                  value={material.type}
+                />
+                <DataItem 
+                  label="密度" 
+                  value={material.density}
+                  unit="g/cm³"
+                />
+                <DataItem 
+                  label="熔点" 
+                  value={material.meltTemp}
+                  unit="°C"
+                />
+                <DataItem 
+                  label="模具温度" 
+                  value={material.moldTemp}
+                  unit="°C"
+                />
+                <DataItem 
+                  label="收缩率" 
+                  value={material.shrinkage}
+                  unit="%"
+                />
               </div>
             </div>
             <Separator />
@@ -121,21 +122,19 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
         {/* 流动数据 */}
         {product.flowData && (
-          <div className="space-y-2">
-            <h4 className="font-medium">流动数据</h4>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <div className="text-gray-500">流动长度 (mm)</div>
-                <div className="font-medium">
-                  {formatNumber(product.flowData?.manualFlowLength ?? 0)}
-                </div>
-              </div>
-              <div>
-                <div className="text-gray-500">流动路径</div>
-                <div className="font-medium">
-                  {formatNumber(product.flowData?.calculatedFlowPath?.length ?? 0)}
-                </div>
-              </div>
+          <div className="space-y-3">
+            <h4 className="font-medium text-sm text-gray-900">流动参数</h4>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <DataItem 
+                label="流动长度" 
+                value={product.flowData?.manualFlowLength ?? 0}
+                unit="mm"
+              />
+              <DataItem 
+                label="流动路径" 
+                value={product.flowData?.calculatedFlowPath?.length ?? 0}
+                unit="mm"
+              />
             </div>
           </div>
         )}
