@@ -41,11 +41,59 @@ function canAddToGroup(group: productGroup, product: ProductGroupItem, allowDiff
 }
 
 function calculateGroupScore(group: productGroup): number {
-  // If group has only one item, return 100
+  // 如果组内只有一个产品，返回基础分数
   if (group.length === 1) return 100;
   
-  // For groups with more than one item, return random number between 60-100
-  return 0;
+  // 计算组内产品的各项指标
+  const products = group.map(product => ({
+    volume: product.volume ?? 0,
+    weight: (product.density ?? 0) * (product.volume ?? 0),
+    height: product.height ?? 0
+  }));
+
+  // 计算各项指标的标准差
+  const volumeStd = calculateStandardDeviation(products.map(p => p.volume));
+  const weightStd = calculateStandardDeviation(products.map(p => p.weight));
+  const heightStd = calculateStandardDeviation(products.map(p => p.height));
+
+  // 计算各项指标的变异系数 (CV = 标准差/平均值)
+  const volumeCV = calculateCV(products.map(p => p.volume));
+  const weightCV = calculateCV(products.map(p => p.weight));
+  const heightCV = calculateCV(products.map(p => p.height));
+
+  // 根据变异系数计算得分（变异系数越小，得分越高）
+  const volumeScore = Math.max(0, 100 * (1 - volumeCV));
+  const weightScore = Math.max(0, 100 * (1 - weightCV));
+  const heightScore = Math.max(0, 100 * (1 - heightCV));
+
+  // 计算最终得分（三项指标的加权平均）
+  const finalScore = (
+    volumeScore * 0.4 + // 体积占比40%
+    weightScore * 0.4 + // 重量占比40%
+    heightScore * 0.2   // 高度占比20%
+  );
+
+  // 确保分数在0-100之间
+  return Math.max(0, Math.min(100, finalScore));
+}
+
+// 计算标准差的辅助函数
+function calculateStandardDeviation(values: number[]): number {
+  const n = values.length;
+  if (n < 2) return 0;
+
+  const mean = values.reduce((a, b) => a + b) / n;
+  const variance = values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (n - 1);
+  return Math.sqrt(variance);
+}
+
+// 计算变异系数的辅助函数
+function calculateCV(values: number[]): number {
+  const mean = values.reduce((a, b) => a + b) / values.length;
+  if (mean === 0) return 0;
+  
+  const std = calculateStandardDeviation(values);
+  return std / mean;
 }
 
 export function generateAllGroupings(products: productGroup, allowDifferentColors: boolean, allowDifferentMaterials: boolean): groupedProductsSchemas {
@@ -146,7 +194,7 @@ export async function calculateProductGroupSchemas(products: productGroup, allow
         
         // 生成临时的随机模具材料、密度和单位价格
         // const randomMold = getRandomMold();
-        // 此时，有了产品的总体积，模具的体积以及模具的边缘间距和底部间距，可��计算出模具的重量
+        // 此时，有了产品的总体积，模具的体积以及模具的边缘间距和底部间距，可计算出模具的重量
         const moldWeight = calculateMoldWeight(
           layoutResult.length,
           layoutResult.width,

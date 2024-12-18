@@ -13,7 +13,7 @@ interface UserProduct {
   color: string;
   material: string;
   productionQuantity: number;
-  partsQuantity: number;
+  cavityCount: number;
   length: number;
   width: number;
   height: number;
@@ -38,7 +38,7 @@ const DEFAULT_PRODUCT: UserProduct = {
   color: '',
   material: '',
   productionQuantity: 0,
-  partsQuantity: 0,
+  cavityCount: 0,
   length: 0,
   width: 0,
   height: 0,
@@ -47,12 +47,20 @@ const DEFAULT_PRODUCT: UserProduct = {
 };
 
 interface ProductInputFormProps {
-  onSubmit: (products: Product[], moldMaterial: string) => void;
+  onSubmit: (products: Product[], moldMaterial: string) => Promise<void>;
+}
+
+function formatNumber(value: number, decimals: number = 0): string {
+  return new Intl.NumberFormat('zh-CN', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  }).format(value);
 }
 
 export function ProductInputForm({ onSubmit }: ProductInputFormProps) {
   const [products, setProducts] = useState<UserProduct[]>([DEFAULT_PRODUCT]);
-  const [selectedMoldMaterial, setSelectedMoldMaterial] = useState<string>(''); // 添加模具材料状态
+  const [selectedMoldMaterial, setSelectedMoldMaterial] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   function handleAddProduct() {
     setProducts([...products, { ...DEFAULT_PRODUCT }]);
@@ -113,86 +121,99 @@ function generateBoundingBoxAndCenterOfMass(
   };
 }
 
-  function handleSubmit() {
-    // 展开部件数量大于1的产品
-    const expandedProducts = products.flatMap(product => {
-      const copies = [];
-      const partsCount = product.partsQuantity || 0;
-      
-      for (let i = 0; i < partsCount; i++) {
-        copies.push({
-          ...product,
-          name: `${product.color}-${product.material}-Part${i + 1}`,
-          partsQuantity: 1
-        });
+  async function handleSubmit() {
+    if (isSubmitting) return;
+    
+    try {
+      setIsSubmitting(true);
+
+      // 展开模具穴数大于1的产品
+      const expandedProducts = products.flatMap(product => {
+        const copies = [];
+        const cavityCount = product.cavityCount || 0;
+        
+        // 计算每个穴的生产数量
+        const quantityPerCavity = Math.ceil(product.productionQuantity / cavityCount);
+        
+        for (let i = 0; i < cavityCount; i++) {
+          copies.push({
+            ...product,
+            name: `${product.color}-${product.material}-Cavity${i + 1}`,
+            cavityCount: 1,
+            productionQuantity: quantityPerCavity  // 更新每个穴的生产数量
+          });
+        }
+        
+        return cavityCount > 0 ? copies : [product];
+      });
+
+      const productsWithId = expandedProducts.map((product, index) => ({
+        id: index + 1,
+        ...product
+      }));
+
+      //对productsWithId进行转换，转换为符合onSubmit的Product类型
+      const convertedProducts: Product[] = productsWithId.map((product) => {
+
+        const { volume, surfaceArea } = generateVolumeAndSurface(
+          product.length,
+          product.width,
+          product.height,
+        );
+
+        const { boundingBox, centerOfMass } = generateBoundingBoxAndCenterOfMass(
+          product.length,
+          product.width,
+          product.height,
+        );
+
+        //根据材料获取密度
+        const density = materialList.find(material => material.name === product.material)?.density ?? 0;
+
+        //根据密度和体积计算重量
+        const weight = density * product.volume;
+
+
+        const convertedProduct = {
+          id: product.id,
+          name: product.name,
+          weight: weight,
+          density: density,
+          color: product.color,
+          dimensions: {
+            length: product.length,
+            width: product.width,
+            height: product.height,
+          },
+          volume: product.volume,
+          materialName: product.material,
+          quantity: product.productionQuantity,
+          cadData: {
+            volume: volume,
+            surfaceArea: surfaceArea,
+            boundingBox: boundingBox,
+            centerOfMass: centerOfMass,
+          },
+        };
+        return convertedProduct;
+      });
+
+      console.log("convertedProducts:", convertedProducts);
+      // 验证产品数量
+      if (convertedProducts.length < 2) {
+        // 可以添加一个提示或错误处理
+        alert('至少需要2个产品才能进行布局分析');
+          return;
       }
-      
-      return partsCount > 0 ? copies : [product];
-    });
-
-    const productsWithId = expandedProducts.map((product, index) => ({
-      id: index + 1,
-      ...product
-    }));
-
-    //对productsWithId进行转换，转换为符合onSubmit的Product类型
-    const convertedProducts: Product[] = productsWithId.map((product) => {
-
-      const { volume, surfaceArea } = generateVolumeAndSurface(
-        product.length,
-        product.width,
-        product.height,
-      );
-
-      const { boundingBox, centerOfMass } = generateBoundingBoxAndCenterOfMass(
-        product.length,
-        product.width,
-        product.height,
-      );
-
-      //根据材料获取密度
-      const density = materialList.find(material => material.name === product.material)?.density ?? 0;
-
-      //根据密度和体积计算重量
-      const weight = density * product.volume;
-
-
-      const convertedProduct = {
-        id: product.id,
-        name: product.name,
-        weight: weight,
-        density: density,
-        color: product.color,
-        dimensions: {
-          length: product.length,
-          width: product.width,
-          height: product.height,
-        },
-        volume: product.volume,
-        materialName: product.material,
-        quantity: product.productionQuantity,
-        cadData: {
-          volume: volume,
-          surfaceArea: surfaceArea,
-          boundingBox: boundingBox,
-          centerOfMass: centerOfMass,
-        },
-      };
-      return convertedProduct;
-    });
-
-    console.log("convertedProducts:", convertedProducts);
-    // 验证产品数量
-    if (convertedProducts.length < 2) {
-      // 可以添加一个提示或错误处理
-      alert('至少需要2个产品才能进行布局分析');
+      if (!selectedMoldMaterial) {
+        alert('请选择模具材料');
         return;
+      }
+
+      await onSubmit(convertedProducts, selectedMoldMaterial);
+    } finally {
+      setIsSubmitting(false);
     }
-    if (!selectedMoldMaterial) {
-      alert('请选择模具材料');
-      return;
-    }
-    onSubmit(convertedProducts, selectedMoldMaterial);
   }
 
   return (
@@ -222,7 +243,7 @@ function generateBoundingBoxAndCenterOfMass(
 
       <div className="space-y-4">
         {products.map((product, index) => (
-          <div key={index} className="grid grid-cols-4 gap-4 p-4 border rounded-lg">
+          <div key={index} className="grid grid-cols-4 gap-4 p-4 border rounded-lg bg-white shadow-sm">
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">颜色</label>
               <Select
@@ -269,16 +290,26 @@ function generateBoundingBoxAndCenterOfMass(
                 onChange={(e) => handleProductChange(index, 'productionQuantity', e.target.value)}
                 min={0}
               />
+              {product.productionQuantity > 0 && (
+                <div className="text-xs text-gray-500">
+                  格式化数量: {formatNumber(product.productionQuantity)} 件
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">部件数量</label>
+              <label className="text-sm font-medium text-gray-700">模具穴数</label>
               <Input
                 type="number"
-                value={product.partsQuantity || ''}
-                onChange={(e) => handleProductChange(index, 'partsQuantity', e.target.value)}
+                value={product.cavityCount || ''}
+                onChange={(e) => handleProductChange(index, 'cavityCount', e.target.value)}
                 min={0}
               />
+              {product.cavityCount > 0 && product.productionQuantity > 0 && (
+                <div className="text-xs text-gray-500">
+                  每穴数量: {formatNumber(Math.ceil(product.productionQuantity / product.cavityCount))} 件
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -289,6 +320,11 @@ function generateBoundingBoxAndCenterOfMass(
                 onChange={(e) => handleProductChange(index, 'length', e.target.value)}
                 min={0}
               />
+              {product.length > 0 && (
+                <div className="text-xs text-gray-500">
+                  {formatNumber(product.length, 1)} mm
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -299,6 +335,11 @@ function generateBoundingBoxAndCenterOfMass(
                 onChange={(e) => handleProductChange(index, 'width', e.target.value)}
                 min={0}
               />
+              {product.width > 0 && (
+                <div className="text-xs text-gray-500">
+                  {formatNumber(product.width, 1)} mm
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -309,6 +350,11 @@ function generateBoundingBoxAndCenterOfMass(
                 onChange={(e) => handleProductChange(index, 'height', e.target.value)}
                 min={0}
               />
+              {product.height > 0 && (
+                <div className="text-xs text-gray-500">
+                  {formatNumber(product.height, 1)} mm
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -319,12 +365,17 @@ function generateBoundingBoxAndCenterOfMass(
                 onChange={(e) => handleProductChange(index, 'volume', e.target.value)}
                 min={0}
               />
+              {product.volume > 0 && (
+                <div className="text-xs text-gray-500">
+                  {formatNumber(product.volume)} mm³
+                </div>
+              )}
             </div>
 
             <Button 
               variant="destructive" 
               onClick={() => handleRemoveProduct(index)}
-              className="col-span-4"
+              className="col-span-4 mt-2"
             >
               删除产品
             </Button>
@@ -336,8 +387,20 @@ function generateBoundingBoxAndCenterOfMass(
         <Button onClick={handleAddProduct}>
           添加产品
         </Button>
-        <Button onClick={handleSubmit} variant="default">
-          提交
+        <Button 
+          onClick={handleSubmit} 
+          variant="default"
+          disabled={isSubmitting}
+          className="relative"
+        >
+          {isSubmitting ? (
+            <div className="flex items-center">
+              <span className="mr-2">提交中</span>
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            </div>
+          ) : (
+            '提交'
+          )}
         </Button>
       </div>
     </div>
