@@ -58,7 +58,7 @@ export function ProductGroupSchemas({
 
   useEffect(() => {
     if (selectedSchema) {
-      console.log("Selected Schema:", selectedSchema);
+      // console.log("Selected Schema:", selectedSchema);
       // Clear group results when schema changes
       setGroupResults({});
       onSchemaChange?.(selectedSchema);
