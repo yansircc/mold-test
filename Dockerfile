@@ -2,7 +2,7 @@
 FROM node:20-slim AS deps
 WORKDIR /app
 
-# Install OpenSSL 1.1
+# Install OpenSSL 1.1.1
 RUN apt-get update -y && \
     apt-get install -y openssl1.1 && \
     rm -rf /var/lib/apt/lists/*
